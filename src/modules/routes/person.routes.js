@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerNewMember, registerNewLibrarian, listMemberDebts } from '../controllers/person.controller.js';
+import { registerNewMember, registerNewLibrarian, listMemberDebts, getAllSocios, getAllBibliotecarios } from '../controllers/person.controller.js';
 import { memberCreateRequest, librarianCreateRequest } from '../schemas/person.schema.js';
 import { validateBody, validateParams } from '../../core/middlewares/validate.js';
 import { idParamSchema } from '../../shared/utils/joi.primitives.js';
@@ -8,7 +8,7 @@ const personRoutes = express.Router();
 
 /**
  * @swagger
- * /person:
+ * /person/socio:
  *   post:
  *     summary: Registrar un nuevo socio
  *     tags: [People]
@@ -27,7 +27,7 @@ personRoutes.post('/socio/', validateBody(memberCreateRequest), registerNewMembe
 
 /**
  * @swagger
- * /person:
+ * /person/bibliotecario:
  *   post:
  *     summary: Registrar un nuevo bibliotecario
  *     tags: [People]
@@ -46,13 +46,13 @@ personRoutes.post('/bibliotecario/', validateBody(librarianCreateRequest), regis
 
 /**
  * @swagger
- * /person/{memberId}/debts:
+ * /person/{id}/deudas:
  *   get:
  *     summary: Listar deudas de un socio
  *     tags: [People]
  *     parameters:
  *       - in: path
- *         name: memberId
+ *         name: id
  *         required: true
  *         schema: { type: integer, example: 5 }
  *       - in: query
@@ -69,7 +69,37 @@ personRoutes.post('/bibliotecario/', validateBody(librarianCreateRequest), regis
  *               items: { $ref: '#/components/schemas/Debt' }
  *       404: { description: Socio no encontrado }
  */
-personRoutes.get('/:memberId(\\d+)', validateParams(idParamSchema), listMemberDebts);
+personRoutes.get('/:id(\\d+)/deudas/', validateParams(idParamSchema), listMemberDebts);
+
+/**
+ * @swagger
+ * /person/socios:
+ *   get:
+ *     summary: Obtener todas los socios 
+ *     tags: [People]
+ *     responses:
+ *       200:
+ *         description: Lista de socios
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/PeopleList' }
+ */
+personRoutes.get('/socios/', getAllSocios);
+
+/**
+ * @swagger
+ * /person/bibliotecarios:
+ *   get:
+ *     summary: Obtener todas los bibliotecarios 
+ *     tags: [People]
+ *     responses:
+ *       200:
+ *         description: Lista de bibliotecarios
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/PeopleList' }
+ */
+personRoutes.get('/bibliotecarios/', getAllBibliotecarios);
 
 /**
  * @swagger
@@ -91,13 +121,14 @@ personRoutes.get('/:memberId(\\d+)', validateParams(idParamSchema), listMemberDe
  *       allOf:
  *         - $ref: '#/components/schemas/PersonBase'
  *       required: [name, lastname, dni]
+ * 
  *     Person:
  *       allOf:
  *         - $ref: '#/components/schemas/PersonBase'
  *       properties:
  *         id: { type: integer, example: 1 }
- *         enrollment_librarian: { type: string, example: B-12345678-xxxx }
- *         member_id: { type: string, example: S-12345678-xxxx }
+ *         enrollment_librarian: { type: string, example: B-xxxx }
+ *         member_id: { type: string, example: S-xxxx }
  * 
  *     Debt:
  *       type: object
@@ -109,6 +140,11 @@ personRoutes.get('/:memberId(\\d+)', validateParams(idParamSchema), listMemberDe
  *           type: object
  *           properties:
  *             id: { type: integer, example: 10 }
+ * 
+ *     PeopleList:
+ *       type: array
+ *       items:
+ *         $ref: '#/components/schemas/Person'
  */
 
 export default personRoutes;

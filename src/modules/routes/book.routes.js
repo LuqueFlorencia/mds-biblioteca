@@ -1,6 +1,6 @@
 import express from 'express';
-import { registerBook, getAvailability, searchBooks } from '../controllers/book.controller.js';
-import { bookCreateRequest, bookSearchQuery } from '../schemas/book.schema.js';
+import { registerBook, getAvailability, searchBooks, listBooksWithAvailableCopies } from '../controllers/book.controller.js';
+import { bookCreateRequest, bookSearchQuery, listAvailQuery } from '../schemas/book.schema.js';
 import { validateBody, validateParams, validateQuery } from '../../core/middlewares/validate.js';
 import { idParamSchema } from '../../shared/utils/joi.primitives.js';
 
@@ -74,6 +74,7 @@ bookRoutes.get('/:id(\\d+)', validateParams(idParamSchema), getAvailability);
  *     summary: Listado de libros acorde al filtro de busqueda
  *     tags: [Books]
  *     parameters:
+ *       - in: query
  *         name: search
  *         schema: { type: string }
  *         description: Búsqueda por título (ILIKE) o ISBN exacto
@@ -87,6 +88,47 @@ bookRoutes.get('/:id(\\d+)', validateParams(idParamSchema), getAvailability);
  *               items: { $ref: '#/components/schemas/Book' }
  */
 bookRoutes.get('/', validateQuery(bookSearchQuery), searchBooks);
+
+/**
+ * @swagger
+ * /book/available:
+ *   get:
+ *     summary: Listar libros con al menos un ejemplar disponible (incluye copias disponibles)
+ *     tags: [Books]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: Filtro por título/autor (ILIKE) o ISBN exacto
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+ *       - in: query
+ *         name: offset
+ *         schema: { type: integer, default: 0, minimum: 0 }
+ *     responses:
+ *       200:
+ *         description: Libros con copias disponibles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id: { type: integer, example: 1 }
+ *                   isbn: { type: string, example: "978-84-08-18123-4" }
+ *                   title: { type: string, example: "Harry Potter" }
+ *                   author: { type: string, example: "J.K. Rowling" }
+ *                   availableCount: { type: integer, example: 2 }
+ *                   availableCopies:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id: { type: integer, example: 7 }
+ */
+bookRoutes.get('/available', validateQuery(listAvailQuery), listBooksWithAvailableCopies);
 
 /**
  * @swagger

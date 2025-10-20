@@ -1,7 +1,7 @@
 import express from 'express';
-import { createLoan, returnLoan, payDebt } from '../controllers/loan.controller.js';
-import { loanCreateRequest, returnLoanRequest } from '../schemas/loan.schema.js';
-import { validateBody, validateParams } from '../../core/middlewares/validate.js';
+import { createLoan, returnLoan, payDebt, getActiveLoans } from '../controllers/loan.controller.js';
+import { loanCreateRequest, returnLoanRequest, activeLoansQuery } from '../schemas/loan.schema.js';
+import { validateBody, validateParams, validateQuery } from '../../core/middlewares/validate.js';
 import { idParamSchema } from '../../shared/utils/joi.primitives.js';
 
 const loanRoutes = express.Router();
@@ -37,7 +37,7 @@ loanRoutes.post('/', validateBody(loanCreateRequest), createLoan);
 
 /**
  * @swagger
- * /loan/{id}/return:
+ * /loan/{id}/devolucion:
  *   post:
  *     summary: Registrar la devolución de un préstamo (crea deuda si hay daño)
  *     tags: [Loans]
@@ -68,17 +68,17 @@ loanRoutes.post('/', validateBody(loanCreateRequest), createLoan);
  *       404: { description: Préstamo no encontrado }
  *       409: { description: El préstamo ya fue devuelto }
  */
-loanRoutes.post('/:id(\\d+)/return', validateBody(returnLoanRequest), returnLoan);
+loanRoutes.post('/:id(\\d+)/devolucion', validateBody(returnLoanRequest), returnLoan);
 
 /**
  * @swagger
- * /loan/{debtId}/payDebt:
+ * /loan/{id}/pagarDeuda:
  *   post:
  *     summary: Marcar deuda como pagada
  *     tags: [Loans]
  *     parameters:
  *       - in: path
- *         name: debtId
+ *         name: id
  *         required: true
  *         schema: { type: integer, example: 3 }
  *     responses:
@@ -89,7 +89,40 @@ loanRoutes.post('/:id(\\d+)/return', validateBody(returnLoanRequest), returnLoan
  *             schema: { $ref: '#/components/schemas/Debt' }
  *       404: { description: Deuda no encontrada }
  */
-loanRoutes.post('/:debtId(\\d+)/payDebt', validateParams(idParamSchema), payDebt);
+loanRoutes.post('/:id(\\d+)/pagarDeuda', validateParams(idParamSchema), payDebt);
+
+/**
+ * @swagger
+ * /loan/active:
+ *   get:
+ *     summary: Listar préstamos activos (returned_at = NULL)
+ *     tags: [Loans]
+ *     parameters:
+ *       - in: query
+ *         name: memberId
+ *         schema: { type: integer }
+ *         description: Filtrar por ID de socio (opcional)
+ *       - in: query
+ *         name: librarianId
+ *         schema: { type: integer }
+ *         description: Filtrar por ID de bibliotecario (opcional)
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+ *       - in: query
+ *         name: offset
+ *         schema: { type: integer, default: 0, minimum: 0 }
+ *     responses:
+ *       200:
+ *         description: Préstamos activos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Loan'
+ */
+loanRoutes.get('/active', validateQuery(activeLoansQuery), getActiveLoans);
 
 /**
  * @swagger

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import Book from '../modules/entities/book.entity.js';
 import Copy from '../modules/entities/copy.entity.js';
@@ -22,6 +23,8 @@ const getBaseOptions = () => ({
 	},
 	migrations: ['src/migrations/*.js'],
 });
+
+export const AppDataSource = new DataSource(getBaseOptions());
 
 export async function getDataSource() {
 	const g = globalThis;

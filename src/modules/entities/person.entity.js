@@ -10,7 +10,7 @@ export default new EntitySchema({
         lastname: { type: String, length: 250 },
         dni: {type: String, length: 9},
         enrollment_librarian: {type: String, length: 100, unique: true, nullable: true, default: null },
-        member_id: {type: String, unique: true, nullable: true, default: null },
+        member_id: {type: String, length: 100, unique: true, nullable: true, default: null },
         role_id: { type: Number },
     },
 
