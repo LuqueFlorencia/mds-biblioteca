@@ -1,1 +1,0 @@
-export { makeOperation } from './operationFactory.js';

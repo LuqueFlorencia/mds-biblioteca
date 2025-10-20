@@ -5,7 +5,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { swaggerUi, swaggerSpec } from '../config/swagger.js';
 import { errorHandler } from '../core/middlewares/errorHandler.js';
-import { verifySmtp } from '../shared/mail/transporter.js';
 import { router as apiRouter } from './routes.js';
 
 export function createApp() {
@@ -38,7 +37,6 @@ export function createApp() {
     // Healthcheck rápido
     app.get('/health', (_req, res) => res.json({ ok: true }));
 
-    verifySmtp(); 
     app.use(errorHandler);
 
     return app;

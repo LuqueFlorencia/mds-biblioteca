@@ -1,19 +1,17 @@
 import { DataSource } from 'typeorm';
-import Category from '../modules/categories/category.entity.js';
-import Payment from '../modules/payments/payment.entity.js';
-import Product from '../modules/products/product.entity.js';
-import Sale from '../modules/sales/sale.entity.js';
-import SaleItem from '../modules/sales/saleItem.entity.js';
-import Supplier from "../modules/suppliers/supplier.entity.js";
-import UnitMeasure from '../modules/units/unit.entity.js';
-import User from "../modules/auth/user.entity.js";
+import Book from '../modules/entities/book.entity.js';
+import Copy from '../modules/entities/copy.entity.js';
+import Debt from '../modules/entities/debt.entity.js';
+import Loan from '../modules/entities/loan.entity.js';
+import Person from '../modules/entities/person.entity.js';
+import Role from '../modules/entities/role.entity.js';
 
 const GLOBAL_KEY = '__typeorm_ds__';
 
 const getBaseOptions = () => ({
 	type: 'postgres',
 	url: process.env.DATABASE_URL,
-	entities: [Category, Payment, Product, Sale, SaleItem, Supplier, UnitMeasure, User],
+	entities: [Book, Copy, Debt, Loan, Person, Role],
 	synchronize: false,
 	logging: process.env.NODE_ENV === 'development',
 	ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
@@ -22,6 +20,7 @@ const getBaseOptions = () => ({
 		idleTimeoutMillis: Number(process.env.DB_IDLE_MS ?? 3000),
 		connectionTimeoutMillis: Number(process.env.DB_CONN_MS ?? 5000),
 	},
+	migrations: ['src/migrations/*.js'],
 });
 
 export async function getDataSource() {
