@@ -1,11 +1,10 @@
 import { getDataSource } from '../../config/database.js';
-import PersonSchema from '../entities/person.entity.js';
-import CopySchema from '../entities/copy.entity.js';
 import LoanSchema from '../entities/loan.entity.js';
 import DebtSchema from '../entities/debt.entity.js';
 import { NotFoundError, ConflictError, BadRequestError } from '../../core/errors/AppError.js';
-import { getData, getMemberOrThrow, getLibrarianOrThrow, getCopyOrThrow } from '../../shared/utils/helpers.js';
+import { getData } from '../../shared/utils/helpers.js';
 import { Messages } from '../../shared/messages.js';
+import { getPenaltyStrategy } from '../strategies/penalty.strategy.js';
 
 // Registrar un Prestamo
 export async function loanBook({ memberId, librarianId, copyId, dateFrom, dateTo } = {}) {
@@ -72,7 +71,6 @@ export async function loanBook({ memberId, librarianId, copyId, dateFrom, dateTo
 // damaged: boolean, si está dañado se crea deuda por amount (si no lo pasan, default 0 no crea deuda)
 export async function returnBook({ loanId, damaged = false, damageAmount = 0 } = {}) {
     const ds = await getDataSource();
-
     const id = Number(loanId);
     if (!id) throw new BadRequestError('loanId inválido');
 
@@ -95,26 +93,17 @@ export async function returnBook({ loanId, damaged = false, damageAmount = 0 } =
 
             // crear deuda si corresponde
             let createdDebt = null;
-            if (damaged === true && Number(damageAmount) > 0) {
-                const debt = debtRepo.create({
-                    amount: Number(damageAmount),
-                    paid: false,
-                    member: { id: loan.member.id },
-                    loan:   { id: loan.id },
-                });
-                const saved = await debtRepo.save(debt);
-
+            const strategy = getPenaltyStrategy({ damaged, damageAmount });
+            const debtData = strategy.compute({ loan, damaged, damageAmount });
+            if (debtData) {
+                const saved = await debtRepo.save(debtRepo.create(debtData));
                 createdDebt = await debtRepo.findOne({
                     where: { id: saved.id },
                     relations: ['member', 'loan'],
                 });
             }
 
-            const freshLoan = await loanRepo.findOne({
-                where: { id: loan.id },
-                relations: ['member', 'copy', 'copy.book'],
-            });
-
+            const freshLoan = await loanRepo.findOne({ where: { id: loan.id }, relations: ['member', 'copy', 'copy.book'], });
             return { loan: freshLoan, createdDebt };
         });
 

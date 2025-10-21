@@ -1,16 +1,17 @@
-import { loanBook, returnBook, payDebtId, listActiveLoans } from '../services/loan.service.js';
+import { payDebtId, listActiveLoans } from '../services/loan.service.js';
 import { asyncHandler } from '../../core/middlewares/asyncHandler.js'
+import { LibraryFacade } from '../facades/library.facade.js';
 
 export const createLoan = asyncHandler(async (req, res) => {
     const { memberId, librarianId, copyId, dateFrom, dateTo } = req.body;
-    const result = await loanBook({ memberId, librarianId, copyId, dateFrom, dateTo });
+    const result = await LibraryFacade.loanBook({ memberId, librarianId, copyId, dateFrom, dateTo });
     return res.status(201).json({ result });
 });
 
 export const returnLoan = asyncHandler(async (req, res) => {
     const loanId = Number(req.params.id);
     const { damaged = false, damageAmount = 0 } = req.body;
-    const result = await returnBook({ loanId, damaged, damageAmount });
+    const result = await LibraryFacade.returnBook({ loanId, damaged, damageAmount });
     return res.status(200).json({ result });
 });
 

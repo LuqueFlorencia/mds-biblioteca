@@ -1,9 +1,10 @@
-import { registerBookWithCopies, searchBook, getBookAvailability, getBooksWithAvailableCopies } from '../services/book.service.js';
 import { asyncHandler } from '../../core/middlewares/asyncHandler.js'
+import { searchBook, getBookAvailability, getBooksWithAvailableCopies } from '../services/book.service.js';
+import { LibraryFacade } from '../facades/library.facade.js';
 
 export const registerBook = asyncHandler(async (req, res) => {
     const { isbn, title, author, copies } = req.body || {};
-    const book = await registerBookWithCopies({ isbn, title, author, copies });
+    const book = await LibraryFacade.addBookWithCopies({ isbn, title, author, copies });
     return res.status(201).json(book);
 });
 

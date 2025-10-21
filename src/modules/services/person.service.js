@@ -1,35 +1,32 @@
-import crypto from 'crypto';
 import PersonSchema from '../entities/person.entity.js';
 import DebtSchema from '../entities/debt.entity.js';
-import { ConflictError, BadRequestError } from '../../core/errors/AppError.js';
+import { ConflictError } from '../../core/errors/AppError.js';
 import { Messages } from '../../shared/messages.js';
 import { getData, getMemberOrThrow } from '../../shared/utils/helpers.js';
-
-function generateNumber(dni, role) {
-	const rand = crypto.randomInt(1000, 9999);
-	if (role === 1) return `S-${rand}`;
-	else if (role === 2) return `B-${rand}`;
-	else throw new BadRequestError("El role proporcionado no es válido.");
-};
+import { PersonFactory } from '../factories/person.factory.js';
 
 export async function registerMember({ name, lastname, dni } = {}) {
     const repo = await getData(PersonSchema);
     const exists = await repo.findOne({ where: { dni } });
-    const member_id = generateNumber(dni, 1);
     if (exists) throw new ConflictError(Messages.ERROR.DUPLICATE('socio registrado con el dni proporcionado'));
 
-    const member = repo.create({ name, lastname, role_id: 1, dni, member_id });
-    return repo.save(member);
+    const data = PersonFactory.create('member', { name, lastname, dni });
+    const person = repo.create(data);
+
+    await repo.save(person);
+    return person;
 };
 
 export async function registerLibrarian({ name, lastname, dni } = {}) {
     const repo = await getData(PersonSchema);
     const exists = await repo.findOne({ where: { dni } });
-    const enrollment_librarian = generateNumber(dni, 2);
     if (exists) throw new ConflictError(Messages.ERROR.DUPLICATE('bibliotecario registrado con el dni proporcionado'));
 
-    const librarian = repo.create({ name, lastname, role_id: 2, dni, enrollment_librarian });
-    return repo.save(librarian);
+    const data = PersonFactory.create('librarian', { name, lastname, dni });
+    const person = repo.create(data);
+
+    await repo.save(person);
+    return person;
 };
 
 // Buscar deudas de un socio
